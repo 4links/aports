@@ -1,0 +1,28 @@
+# Maintainer: 41inks <4links@github.com>
+
+pkgname=initramfs-dropbear
+pkgver=3.5.0
+pkgrel=0
+arch="all"
+license="GPL-2.0-only"
+pkgdesc="initramfs integration for decrypting disks using dropbear"
+url="https://www.kernel.org"
+depends="mkinitfs"
+#makedepends="busybox patch coreutils"
+options="!check"
+install=
+source="dropbear.patch
+unlock_disk"
+
+prepare() {
+    cp /usr/share/mkinitfs/initramfs-init "$srcdir"
+    patch -s -N $srcdir/initramfs-init dropbear.patch
+}
+
+package() {
+    install -D -m 755 "$srcdir"/initramfs-init "$pkgdir"/usr/share/mkinitfs/initramfs-init-dropbear
+    install -D -m 755 "$srcdir"/unlock_disk "$pgkdir"/etc/dropbear/unlock_disk
+}
+
+sha512sums="36691bf7d9e138a0a9e8e80afa5631d37169a77d340a0f1403a7d6c6efa915265281470b61d9341d7f88121ba9659f3d8f7fd516e402a1d802ac4c7dabac7d34  dropbear.patch
+dc5b944e8b9cb4c345113833a25c9ab929365d8b974e857271e6215e3dc30dc305d3ea11e62342cf8f0ef1d476cc5e78b13546e9753404398f8467ea72386021  unlock_disk"
