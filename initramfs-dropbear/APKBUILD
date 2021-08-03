@@ -22,7 +22,6 @@ prepare() {
 package() {
     install -D -m 755 "$srcdir"/initramfs-init "$pkgdir"/usr/share/mkinitfs/initramfs-init-dropbear
     install -D -m 755 "$srcdir"/unlock_disk "$pkgdir"/etc/dropbear/unlock_disk
-    ls -alR $pkgdir
 }
 
 sha512sums="36691bf7d9e138a0a9e8e80afa5631d37169a77d340a0f1403a7d6c6efa915265281470b61d9341d7f88121ba9659f3d8f7fd516e402a1d802ac4c7dabac7d34  dropbear.patch
