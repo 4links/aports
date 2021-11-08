@@ -1,14 +1,5 @@
 ﻿--- initramfs-init.in
 +++ initramfs-init-dropbear
-@@ -1,7 +1,7 @@
- #!/bin/sh
- 
- # this is the init script version
--VERSION=3.5.0-r0
-+VERSION=@VERSION@
- SINGLEMODE=no
- sysroot=/sysroot
- splashfile=/.splash.ctrl
 @@ -250,6 +250,23 @@
  	fi
  }
