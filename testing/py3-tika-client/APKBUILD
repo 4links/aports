@@ -1,0 +1,31 @@
+# Contributor: Hinten Links <hlinks@posteo.de>
+# Maintainer: Hinten Links <hlinks@posteo.de>
+_pkgname=tika_client
+pkgname="py3-tika-client"
+pkgver=0.5.0
+pkgrel=0
+pkgdesc="A modern Python REST client for Apache Tika server"
+url="https://github.com/stumpylog/tika-client"
+arch="noarch"
+license="MPL-2.0"
+depends="python3"
+checkdepends="py3-pytest-httpx"
+makedepends="py3-build py3-hatchling py3-wheel py3-installer py3-pathspec"
+source="https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname_$pkgver"
+subpackages="$pkgname-pyc"
+options="!check"
+
+build() {
+  cd "${srcdir}/${_pkgname}-${pkgver}"
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd "${srcdir}/${_pkgname}-${pkgver}"
+  python -m installer --destdir="${pkgdir}" dist/*.whl
+}
+
+sha512sums="
+b39edef3a3ba891379f5601d8ac682492165dcf529a3caf7a5d473fbd39d6c59747d64f293d2c7bf9481da69d70bd1b4a29615fd1c78e5f8b3915b3983ea46d7  tika_client-0.5.0.tar.gz
+"
