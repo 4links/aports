@@ -1,0 +1,50 @@
+﻿--- initramfs-init.in
++++ initramfs-init-dropbear
+@@ -250,6 +250,23 @@
+ 	fi
+ }
+ 
++setup_dropbear() {
++	local port="${KOPT_dropbear}"
++	local keys=""
++
++	# set the unlock_disc script as shell for root
++	sed -i 's|\(root:x:0:0:root:/root:\).*$|\1/etc/dropbear/unlock_disk|' /etc/passwd
++	echo '/etc/dropbear/unlock_disk' > /etc/shells
++
++	# transfair authorized_keys
++	mkdir /root/.ssh
++	mv /etc/dropbear/authorized_keys /root/.ssh
++
++	dropbear -F -E -s -j -k -p $port
++
++	[ -b /dev/mapper/${KOPT_cryptdm} ] || return 1
++}
++:
+ setup_nbd() {
+ 	modprobe -q nbd max_part=8 || return 1
+ 	local IFS=, n=0
+@@ -344,7 +361,7 @@
+ set -- $(cat /proc/cmdline)
+ 
+ myopts="autodetect_serial chart cryptroot cryptdm cryptheader cryptoffset
+-	cryptdiscards cryptkey debug_init ds init init_args keep_apk_new modules
++	cryptdiscards cryptkey debug_init dropbear ds init init_args keep_apk_new modules
+	pkgs quiet root_size root usbdelay ip alpine_repo apkovl splash
+	blacklist overlaytmpfs overlaytmpfsflags rootfstype rootflags nbd resume resume_offset
+	s390x_net dasd ssh_key BOOTIF zfcp uevent_buf_size aoe aoe_iflist aoe_mtu wireguard"
+@@ -466,7 +483,12 @@
+ fi
+ eend 0
+ 
+-if [ -n "$KOPT_cryptroot" ]; then
++if [ -n "$KOPT_dropbear" ]; then
++	configure_ip
++	if [ -n "$KOPT_cryptroot" ]; then
++		setup_dropbear || echo "Failed to uncrypt root via ssh"
++	fi
++elif [ -n "$KOPT_cryptroot" ]; then
+ 	cryptopts="-c ${KOPT_cryptroot}"
+ 	if [ "$KOPT_cryptdiscards" = "yes" ]; then
+ 		cryptopts="$cryptopts -D"
+
