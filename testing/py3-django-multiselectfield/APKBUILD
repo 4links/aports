@@ -1,0 +1,49 @@
+# Contributor: hinten links <hlinks@posteo.de>
+# Maintainer: hinten links <hlinks@psoteo.de>
+_pkgname=django-multiselectfield
+pkgname=py3-django-multiselectfield
+pkgver=0.1.12
+pkgrel=0
+pkgdesc="Django App that adds Cross-Origin Resource Sharing (CORS) headers to responses"
+url="https://github.com/goinnn/django-multiselectfield"
+arch="noarch"
+license="LGPL3"
+depends="
+	py3-django
+"
+makedepends="
+	py3-gpep517
+	py3-setuptools_scm
+	py3-wheel
+	"
+checkdepends="
+	py3-coverage
+	py3-pytest
+	py3-pytest-django
+	py3-pytest-randomly
+"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
+options="!check" # pytest-django and pytest-randomly are not on the repositories yet
+builddir="$srcdir/$_pkgname-$pkgver"
+
+build() {
+  gpep517 build-wheel \
+    --wheel-dir .dist \
+    --output-fd 3 3>&1 >&2
+}
+
+check() {
+  python3 -m venv --clear --without-pip --system-site-packages .testenv
+  .testenv/bin/python3 -m installer .dist/*.whl
+  .testenv/bin/python3 runtests.py
+}
+
+package() {
+  python3 -m installer -d "$pkgdir" \
+    .dist/*.whl
+}
+
+sha512sums="
+135af7e6137908641028090de6ea695a76f84c46fd2abcb53dce46a1bc1852020f4989b8165191b74d691aecdab5a2f5c18ff52987bb0f3ef1fd0f8542b9fa25  django-multiselectfield-0.1.12.tar.gz
+"
