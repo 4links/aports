@@ -1,77 +1,90 @@
 # Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=cryptsetup
-pkgver=2.4.1 # XXX: remove automake/autoconf when upgrading to 2.5.0
+pkgver=2.7.3
 pkgrel=0
 pkgdesc="Userspace setup tool for transparent encryption of block devices using the Linux 2.6 cryptoapi"
 url="https://gitlab.com/cryptsetup/cryptsetup"
 arch="all"
-license="GPL-2.0-or-later WITH OpenSSL-Exception"
-makedepends_build="automake autoconf bash coreutils"
-makedepends_host="lvm2-dev openssl1.1-compat-dev popt-dev util-linux-dev
-	json-c-dev argon2-dev"
+license="GPL-2.0-or-later WITH cryptsetup-OpenSSL-exception"
+makedepends_build="asciidoctor bash coreutils"
+makedepends_host="
+	argon2-dev
+	json-c-dev
+	lvm2-dev
+	openssl-dev>3
+	popt-dev
+	util-linux-dev
+	"
 makedepends="$makedepends_build $makedepends_host"
 checkdepends="device-mapper which sharutils"
 subpackages="$pkgname-dev $pkgname-doc $pkgname-libs $pkgname-openrc"
 source="https://www.kernel.org/pub/linux/utils/cryptsetup/v${pkgver%.*}/cryptsetup-$pkgver.tar.gz
 	dmcrypt.initd
 	dmcrypt.confd
-
-	flush-stdout.patch
 	"
 
 # secfixes:
+#   2.4.3-r0:
+#     - CVE-2021-4122
 #   2.3.4-r0:
 #     - CVE-2020-14382
 
 build() {
-	# Disable support for external tokens since it requires
-	# dlvsym(3) which is a GNU extension and not available in musl.
-	./configure \
-		--build="$CBUILD" \
-		--host="$CHOST" \
-		--prefix=/usr \
-		--libdir=/lib \
-		--sbindir=/sbin \
-		--disable-static \
-		--enable-libargon2 \
-		--with-crypto_backend=openssl \
-		--disable-external-tokens \
-		--disable-ssh-token
-	make
+  # Disable support for external tokens since it requires
+  # dlvsym(3) which is a GNU extension and not available in musl.
+  if [ -z "$BOOTSTRAP" ]; then
+    export CFLAGS="$CFLAGS -flto=auto"
+  fi
+  ./configure \
+    --build="$CBUILD" \
+    --host="$CHOST" \
+    --prefix=/usr \
+    --libdir=/lib \
+    --sbindir=/sbin \
+    --disable-static \
+    --enable-libargon2 \
+    --with-crypto_backend=openssl \
+    --disable-external-tokens \
+    --disable-ssh-token
+  make
 }
 
 check() {
-	make check
+  make check
 }
 
 package() {
-	make DESTDIR=$pkgdir install
+  make DESTDIR=$pkgdir install
 
-	mkdir -p "$pkgdir"/usr/lib
-	mv "$pkgdir"/lib/pkgconfig "$pkgdir"/usr/lib/
+  mkdir -p "$pkgdir"/usr/lib
+  mv "$pkgdir"/lib/pkgconfig "$pkgdir"/usr/lib/
 
-	install -Dm644 "$srcdir"/dmcrypt.confd "$pkgdir"/etc/conf.d/dmcrypt
-	install -Dm755 "$srcdir"/dmcrypt.initd "$pkgdir"/etc/init.d/dmcrypt
+  install -Dm644 "$srcdir"/dmcrypt.confd "$pkgdir"/etc/conf.d/dmcrypt
+  install -Dm755 "$srcdir"/dmcrypt.initd "$pkgdir"/etc/init.d/dmcrypt
 
-	mkdir -p "$pkgdir"/usr/share/doc/$pkgname/
-	install -m644 README.md FAQ docs/v$pkgver-ReleaseNotes \
-		"$pkgdir"/usr/share/doc/$pkgname/
+  mkdir -p "$pkgdir"/usr/share/doc/$pkgname/
+  install -m644 README.md FAQ.md docs/v$pkgver-ReleaseNotes \
+    -t "$pkgdir"/usr/share/doc/$pkgname/
+
+  # mandoc does not support the .so directive which replace the
+  # content of a man page with that of another. cryptsetup uses
+  # several man pages which just contain an .so directive. Replace
+  # these with symlinks to make them work by default in mandoc.
+  #
+  # See https://inbox.vuxu.org/mandoc-tech/20101024194129.GJ20876@iris.usta.de/#r
+  grep -l -R '^\.so ' "$pkgdir"/usr/share/man |
+    xargs awk '/^\.so/ { system("ln -fs " $2 " " FILENAME) }'
 }
 
 libs() {
-	pkgdesc="Cryptsetup shared library"
-	mkdir -p "$subpkgdir"
-	mv "$pkgdir"/lib "$subpkgdir"/
+  pkgdesc="Cryptsetup shared library"
+
+  amove /lib
 }
 
 sha512sums="
-b12589181e48c8ae7e95fa7d0642caa479a0000c76ac4c2f9dcacb9319512f0c079d037c6fe596639481a62b6290dd7d0bf826ac5e096c526435a8241386fe0e  cryptsetup-2.4.1.tar.gz
-a3ca3e648749136ee724692b61488cd855f118eb93435942c2b04964a34fe49d0f0da4ef64cd2531c1c0f650e77808cf5d802789fd7664398248ead668bb35e5  dmcrypt.initd
+3b0fef4051c8c580f7def20144f37f1f7c917dbf8a90370ce027745c35d33780012a96b94a6928a3688c77ab72e74b9eba6396bb2f30a222f8125b7a83f99bf3  cryptsetup-2.7.3.tar.gz
+fcb7b002ce7a0cc7b948c848a7068e493c84e040872b45be6080960c85b9345839260eb1f653fdb5d8945f0c5348aebe4362bee5282aaed6e8d0a2cc4e157f58  dmcrypt.initd
 74422d5e1614b43af894ea01da1ea80d805ec7f77981cbb80a6b1a4becad737a8825d7269812499095a7f50d39fa7da5bf4e4edae63529b1fe87b9176943a733  dmcrypt.confd
-529187851def5fbc08e995eba90d3f013f1cf8469dcb9344f83d1e3c73c71467ca4ed62c8282ec27ebfa30ccc33653fdd1aea8d1d80e1ac4293d51865c9a6200  flush-stdout.patch
 "
-sha512sums="b12589181e48c8ae7e95fa7d0642caa479a0000c76ac4c2f9dcacb9319512f0c079d037c6fe596639481a62b6290dd7d0bf826ac5e096c526435a8241386fe0e  cryptsetup-2.4.1.tar.gz
-d93ea4c525d2c4b953d435a49241b22518c52b8cfa876a49106421df5be5c54c4a6c5f14eb3e55f949326ab3702d1684adc6733db239f75e401158c95361767d  dmcrypt.initd
-74422d5e1614b43af894ea01da1ea80d805ec7f77981cbb80a6b1a4becad737a8825d7269812499095a7f50d39fa7da5bf4e4edae63529b1fe87b9176943a733  dmcrypt.confd
-529187851def5fbc08e995eba90d3f013f1cf8469dcb9344f83d1e3c73c71467ca4ed62c8282ec27ebfa30ccc33653fdd1aea8d1d80e1ac4293d51865c9a6200  flush-stdout.patch"
