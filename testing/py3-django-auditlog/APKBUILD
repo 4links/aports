@@ -1,0 +1,37 @@
+# Contributor: Hinten Links <hlinks@posteo.de>
+# Maintainer:
+_realname=django-auditlog
+pkgname="py3-$_realname"
+pkgver=3.0.0
+pkgrel=0
+pkgdesc="A reusable app for Django that makes logging object changes a breeze."
+options="!check" # No testsuite
+url="https://github.com/jazzband/django-auditlog"
+arch="noarch"
+license="MIT"
+depends="
+    py3-django
+    py3-psycopg
+    "
+makedepends="
+    py3-setuptools_scm
+	"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/d/$_realname/$_realname-$pkgver.tar.gz"
+builddir="$srcdir"/$_realname-$pkgver
+
+subpackages="$pkgname-pyc"
+
+build() {
+  python3 setup.py build
+}
+
+check() {
+  python3 tests/manage.py test tests
+}
+
+package() {
+  python3 setup.py install --root "$pkgdir"
+}
+
+sha512sums="d458b4d9bb55dc67e1b6bf07dffab69224118cc54d101378d180d0226b62fc401cd7555fe43c888e180bd059aacac187634dcc6a6f5e11aab197634f792700f5  django-auditlog-3.0.0.tar.gz"
