@@ -1,0 +1,46 @@
+# Contributor: Carlo Landmeter <clandmeter@alpinelinux.org>
+# Maintainer: Carlo Landmeter <clandmeter@alpinelinux.org>
+pkgname=py3-reportlab
+_pyname=reportlab
+pkgver=4.2.0
+pkgrel=0
+pkgdesc="Python library for generating PDFs and graphics"
+url="https://www.reportlab.com/opensource"
+arch="all"
+license="BSD-3-Clause"
+depends="py3-pillow python3 font-dejavu"
+makedepends="
+	freetype-dev
+	libart-lgpl-dev
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	python3-dev
+	"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/${_pyname:0:1}/$_pyname/$_pyname-$pkgver.tar.gz"
+builddir="$srcdir/$_pyname-$pkgver"
+
+replaces="py-reportlab" # Backwards compatibility
+provides="py-reportlab=$pkgver-r$pkgrel" # Backwards compatibility
+
+prepare() {
+	default_prepare
+}
+
+build() {
+	export CFLAGS="$CFLAGS -I/usr/include/libart-2.0"
+
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+5dbab548dfa4b0eebb19c0702975b540244693ca30faf7a7bf88e7e596d2a9acd4047f0dddc5433da4da385282ab74f17b66a09394eefe07797c3d193ed38cb5  reportlab-4.2.0.tar.gz
+"
