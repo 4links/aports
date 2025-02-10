@@ -1,0 +1,40 @@
+# Contributor: <xmingske@gmail.com>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=py3-gunicorn
+_pkgname=gunicorn
+pkgver=22.0.0
+pkgrel=0
+pkgdesc="WSGI HTTP Server for UNIX"
+url="https://gunicorn.org/"
+arch="noarch"
+license="MIT"
+makedepends="py3-gpep517 py3-setuptools py3-wheel"
+checkdepends="py3-pytest py3-pytest-cov py3-aiohttp py3-gevent"
+subpackages="$pkgname-pyc"
+source="$_pkgname-$pkgver.tar.gz::https://github.com/benoitc/gunicorn/archive/$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+replaces=py-gunicorn # Backwards compatibility
+provides=py-gunicorn=$pkgver-r$pkgrel # Backwards compatibility
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest \
+		--deselect tests/workers/test_geventlet.py
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+cb366cfc2875a32e1e6ddd3bd521650cb87a51c29b036b2cfbd9f8371307d1ffefafbcc85d45753c29186a92def77112e2ddd49fdc2116d2d32702635e88ba53  gunicorn-22.0.0.tar.gz
+"
