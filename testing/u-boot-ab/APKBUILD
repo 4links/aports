@@ -1,0 +1,50 @@
+pkgname=u-boot-ab
+pkgver=1.0.0
+pkgrel=0
+pkgdesc="Tools to support booting from a/b partiion using u-boot"
+url="https://gitlab.com/raspi-alpine/builder"
+arch="aarch64"
+license="Apache-2.0"
+makedepents=u-boot-tools
+source="https://gitlab.com/raspi-alpine/crosscompile-uboot-tool/-/raw/main/resources/uboot.c
+		99-uboot.sh
+		ab_resizedata
+		resize_last.initd
+		ab_active
+		boot.cmd
+		Makefile
+		ab_bootparam
+		ab_clock.initd
+		ab_clock.confd
+		ab_flash
+		"
+build() {
+	make -C $srcdir
+
+}
+
+package() {
+	make -C $srcdir DESTDIR="$pkgdir" install
+	install -D -m755 "$srcdir"/resize_last.initd "$pkgdir"/etc/init.d/resize_last
+	install -D -m755 "$srcdir"/ab_resizedata "$pkgdir"/usr/sbin/ab_resizedata
+	install -D -m755 "$srcdir"/ab_clock.initd "$pkgdir"/etc/init.d/ab_clock
+	install -D -m644 "$srcdir"/ab_clock.confd "$pkgdir"/etc/conf.d/ab_clock
+	install -D -m755 "$srcdir"/ab_active "$pkgdir"/usr/sbin/ab_active
+	install -D -m755 "$srcdir"/ab_flash "$pkgdir"/usr/sbin/ab_flash
+	install -D -m755 "$srcdir"/ab_bootparam "$pkgdir"/usr/sbin/ab_bootparam
+	install -D -m755 "$srcdir"/99-uboot.sh "$pkgdir"/etc/local.d/99-uboot.start
+}
+
+sha512sums="
+a9226cbfa1d1e555e7a89773baa30b8a6f9cbb5c5328b1301228da10fca040c290735ea7b909f15857db542824b9800d67a2c0fe19f32a35d75222170810a7ad  uboot.c
+ab7b353726642d8c3eab9815d594a6dce4aa61ce7c5352d04b6b309e2bfc3c10141ffa0aa12b276d305e943fd99346fa55e0f93237bb32555fd0aa5cac374836  99-uboot.sh
+141dd33d0d525c309e3e0031c182f1f2e8b08e280d46309c7aa8af4bf8dfd62a882688079eb23d8e1ef75eef0ecfb569a13e9a6052a5b4616e3c8918c6d1bd43  ab_resizedata
+bf6c1d55cc41c72c34d828c95d74116c61aa7c3d9d0eba310b08aac8a7a79813b36b717a33a22924fcf0292262f7fc02b7f9a044e09722b0ee11bf0961a4156a  resize_last.initd
+d85f4998a141bfa0f648a1f6481ced5a32cdbb817992e2ffd6e72f6e7fc6bb29ca1779dfa383ff3c0b1a571aca0b15fc647abe00cc3beba01ecd3299e973c1bf  ab_active
+b8047a1f10fb68773253771c7583252c33c07fbae6c3fb08d25a5308a17a141c94eb476c8bfb348ed311723c40d9e54973dd53ecb1fe62a0f4495e812e4cb77a  boot.cmd
+cf2f4569162d8b2bda6b303375267dcc2c19e1f9c90576e4f929ab17cb74e312d97fcd0347eb4cf86817237b32c5b85827bb6f33011f54d3fd5205626da3d16b  Makefile
+79ca86e503a61ed071eba802cdf0d7d5b00dd7492d9f28cdf727ff35d56ed97bf8fdef54628e1c08be7d7de5b15260dde4ba5b8bcfde9ad6c56a27950bd7beae  ab_bootparam
+19e4ece63fc49f171c826874bbf5445093b4e5cf9ff8eed4e38c9d13ad5cbc8ae0c745651a3afb5bd4a78d15e9ac4f83402e5173ba04db45906ff5302703e5c2  ab_clock.initd
+3c068b9c14d3f3889930fc949a7bf12b1e4dfed682794dde253163a4e14cb5c902da1189373cace9a8bc2f3a14a66c370f6ee81596ea88e45b287b1f11f28a6a  ab_clock.confd
+32e0a04d350d193b43224f339d9bcf6e284e81182767ceb9e6752a9b1a5bcd354338e88cf17df3649659472d4c2282fc7006f34dd25b8caeb98f45b6bc55484f  ab_flash
+"
