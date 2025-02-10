@@ -1,0 +1,49 @@
+# Contributor: Alex Denes <caskd@redxen.eu>
+# Maintainer:
+_pkgname=django_cors_headers
+pkgname=py3-django-cors-headers
+pkgver=4.4.0
+pkgrel=0
+pkgdesc="Django App that adds Cross-Origin Resource Sharing (CORS) headers to responses"
+url="https://github.com/adamchainz/django-cors-headers"
+arch="noarch"
+license="MIT"
+depends="
+	py3-django
+"
+makedepends="
+	py3-gpep517
+	py3-setuptools_scm
+	py3-wheel
+	"
+checkdepends="
+	py3-coverage
+	py3-pytest
+	py3-pytest-django
+	py3-pytest-randomly
+"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
+options="!check" # pytest-django and pytest-randomly are not on the repositories yet
+builddir="$srcdir/$_pkgname-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 runtests.py
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+3c3ac226d62623d0c79ef7687de29724f3d576e7344599ec4fe3288ba93520bdef3d5b8b4a9f6668d1808ad5b43943b7512de1809656b643e38079cf9c17996a  django_cors_headers-4.4.0.tar.gz
+"
