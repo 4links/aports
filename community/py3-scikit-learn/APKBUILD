@@ -1,0 +1,56 @@
+# Contributor: Carlos Giraldo <cgiraldo@gradiant.org>
+# Maintainer: Carlos Giraldo <cgiraldo@gradiant.org>
+pkgname=py3-scikit-learn
+_pkgname=scikit_learn
+pkgver=1.5.1
+pkgrel=0
+pkgdesc="a Python module for machine learning built on top of SciPy"
+url="https://scikit-learn.org/"
+arch="all"
+license="BSD-3-Clause"
+options="!check" # no test suite
+depends="
+	py3-joblib
+	py3-numpy
+	py3-scipy
+	py3-threadpoolctl
+	python3
+	"
+makedepends="
+	cython
+	py3-gpep517
+	py3-numpy-dev
+    py3-meson-python
+	py3-setuptools
+	py3-wheel
+	python3-dev
+	"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/s/$_pkgname/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+case "$CARCH" in
+aarch64)
+  export SKLEARN_NO_OPENMP=1
+  ;;
+esac
+
+build() {
+  CFLAGS="$CFLAGS -O2 -flto=auto" \
+    gpep517 build-wheel \
+    --wheel-dir .dist \
+    --output-fd 3 3>&1 >&2
+}
+
+package() {
+  python3 -m installer -d "$pkgdir" \
+    .dist/*.whl
+
+  find "$pkgdir" -type d -name "tests" -exec rm -rf {} \+
+}
+
+sha512sum="
+"
+sha512sums="
+db19d7b75d0c58adf20218a42ff50909b23dda0d6fc690ff2888bec8afb1cafdb4caebdf2f6fcd78da09f4344033de8f3e72bf4ad72f4c47addc8d51cb90dabf  scikit_learn-1.5.1.tar.gz
+"
