@@ -1,0 +1,34 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=py3-threadpoolctl
+pkgver=3.5.0
+pkgrel=0
+pkgdesc="Python helpers to limit the number of threads used in native libraries"
+url="https://github.com/joblib/threadpoolctl"
+arch="noarch"
+license="BSD-3-Clause"
+depends="python3"
+makedepends="py3-flit-core py3-gpep517"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="https://pypi.python.org/packages/source/t/threadpoolctl/threadpoolctl-$pkgver.tar.gz"
+builddir="$srcdir/threadpoolctl-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/threadpoolctl*.whl
+}
+
+sha512sums="
+09b5f4bd15bb959f4a986340503606b3d0f66aee531396c2337b93a37ece220ceb6ac42979f8bad7fbc2ee9321d5a6a0666142ffb688bb0cf3a6138625fdd748  threadpoolctl-3.5.0.tar.gz
+"
