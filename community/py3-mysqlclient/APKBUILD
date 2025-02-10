@@ -1,0 +1,47 @@
+# Contributor: Carlo Landmeter <clandmeter@alpinelinux.org>
+# Maintainer: Carlo Landmeter <clandmeter@alpinelinux.org>
+pkgname=py3-mysqlclient
+pkgver=2.2.4
+pkgrel=0
+pkgdesc="MySQL database connector for Python (with py3 support)"
+url="https://mysqlclient.readthedocs.io/"
+arch="all"
+license="GPL-2.0-or-later"
+makedepends="
+	mariadb-dev
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	python3-dev
+	"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="mysqlclient-python-$pkgver.tar.gz::https://github.com/PyMySQL/mysqlclient-python/archive/v$pkgver.tar.gz"
+builddir="$srcdir/mysqlclient-$pkgver"
+options="!check" # tests need net
+
+replaces="py-mysqlclient" # Backwards compatibility
+provides="py-mysqlclient=$pkgver-r$pkgrel" # Backwards compatibility
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+
+	rm "$pkgdir"/usr/lib/python*/site-packages/MySQLdb/_mysql.c
+}
+
+sha512sums="
+2512a0b908826c56851567b513c8b51a9913359e939c40bea6219498bb2a937f3119cc77dfa54aed4676d63c2acdc5d50f582311998c53e63ec4528c1f507276  mysqlclient-python-2.2.4.tar.gz
+"
